@@ -1,70 +1,146 @@
-# Getting Started with Create React App
+# React + Vite + JSON Server + TanStack React Query
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This is a beginner-friendly project built with **React**, **Vite**, **JSON Server**, and **TanStack React Query** to help you understand data fetching, query caching, and handling mutations in a modern React application.
 
-## Available Scripts
 
-In the project directory, you can run:
+In this project, I have combined **React**, **Vite**, and **JSON Server** to create a simple app that fetches data from a backend using **TanStack React Query**. This setup will help you understand how to:
 
-### `npm start`
+- Fetch data from a local server.
+- Handle query caching, polling, pagination, and infinite scroll.
+- Work with mutations and invalidation.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Setup
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### Step 1: Create a React App with Vite
+First, we need to create a new React project using Vite. Open your terminal and run the following command:
 
-### `npm test`
+bash
+npm create vite@latest
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
 
-### `npm run build`
+Step 2: Install Dependencies
+After setting up the Vite app, install the following packages:
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+JSON Server – to mock a backend API:
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+bash
+Copy code
+npm install json-server
+TanStack React Query – to handle data fetching and caching:
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+bash
+Copy code
+npm install @tanstack/react-query
+Step 3: Setup JSON Server
+Create a db.js file in the root directory and add your mock data.
 
-### `npm run eject`
+Add a script in your package.json to start the JSON server:
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+json
+Copy code
+"scripts": {
+  "server-json": "json-server --watch db.json --port 4000"
+}
+Run the JSON server using:
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+bash
+Copy code
+npm run server-json
+This will start the JSON server on http://localhost:4000.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+Step 4: Setting Up React Query
+Set up React Query by wrapping your app in the QueryClientProvider in your main.jsx:
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+jsx
+Copy code
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-## Learn More
+const queryClient = new QueryClient();
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <QueryClientProvider client={queryClient}>
+    <App />
+  </QueryClientProvider>
+);
+Use the useQuery hook to fetch data from your JSON server.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+Features
+Data Fetching with useQuery
+Learn how to fetch data from the server using React Query's useQuery. For example:
 
-### Code Splitting
+jsx
+Copy code
+import { useQuery } from '@tanstack/react-query';
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+const fetchPosts = async () => {
+  const response = await fetch('http://localhost:4000/posts');
+  return response.json();
+};
 
-### Analyzing the Bundle Size
+const Posts = () => {
+  const { data, error, isLoading } = useQuery(['posts'], fetchPosts);
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
 
-### Making a Progressive Web App
+  return (
+    <ul>
+      {data.map(post => (
+        <li key={post.id}>{post.title}</li>
+      ))}
+    </ul>
+  );
+};
+DevTools
+React Query comes with powerful DevTools that can help you inspect queries and mutations. You can enable them like this:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+jsx
+Copy code
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
-### Advanced Configuration
+const App = () => (
+  <>
+    <Posts />
+    <ReactQueryDevtools initialIsOpen={false} />
+  </>
+);
+Query Cache & Stale Time
+React Query automatically caches data to improve performance. You can customize how long data stays fresh using staleTime.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+Polling
+You can set up polling to automatically refresh data at regular intervals:
 
-### Deployment
+jsx
+Copy code
+const { data, isLoading } = useQuery(
+  ['posts'],
+  fetchPosts,
+  { refetchInterval: 5000 } // Poll every 5 seconds
+);
+useQuery on Click
+Instead of fetching data on component mount, you can fetch data on user interaction (e.g., button click).
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+Query by ID
+Learn how to fetch data for a specific item by ID using React Query's useQuery.
 
-### `npm run build` fails to minify
+Pagination & Infinite Scroll
+Learn how to paginate data and load more items using the useQuery hook.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Mutations
+Handle mutations (e.g., POST, PUT, DELETE requests) with React Query. You can use useMutation to perform these operations.
+
+Query Invalidation
+Invalidate queries to refetch data when something changes.
+
+Mutation Response
+Learn how to handle the response from a mutation and update your UI accordingly.
+
+Optimistic Updates
+Optimistically update your UI when performing mutations, without waiting for the server response.
+
+How to Give a Star
+If you found this project helpful, please consider giving it a star! 🌟 This will help me continue improving the project and provide more useful resources. To give a star:
+
+Click on the star icon at the top of this page.
+Choose Star from the dropdown.
+Thank you for supporting the project!
